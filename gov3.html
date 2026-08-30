@@ -1,0 +1,2137 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MPLAD Sentinel | AI Project & Anti-Fraud Risk Intelligence</title>
+
+<!-- Leaflet Map CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+/* =========================================================
+   THEME DESIGN SYSTEM (DARK & LIGHT MODE)
+   ========================================================= */
+:root {
+    --bg: #07111f;
+    --panel: #0d1b2d;
+    --panel2: #10233a;
+    --border: #203752;
+    --text: #eaf2ff;
+    --muted: #8da3bd;
+    --card-bg: linear-gradient(145deg, #0d1b2d, #091727);
+
+    --cyan: #32d9ff;
+    --green: #35e59a;
+    --yellow: #ffc857;
+    --red: #ff5577;
+    --purple: #a78bfa;
+
+    --shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+
+[data-theme="light"] {
+    --bg: #f1f5f9;
+    --panel: #ffffff;
+    --panel2: #f8fafc;
+    --border: #cbd5e1;
+    --text: #0f172a;
+    --muted: #64748b;
+    --card-bg: linear-gradient(145deg, #ffffff, #f8fafc);
+
+    --cyan: #0284c7;
+    --green: #10b981;
+    --yellow: #d97706;
+    --red: #ef4444;
+    --purple: #7c3aed;
+
+    --shadow: 0 10px 30px rgba(0,0,0,.08);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Inter, Segoe UI, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* =========================================================
+   LAYOUT & SIDEBAR
+   ========================================================= */
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 25px 16px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+    padding: 0 10px;
+}
+
+.logo-img {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 0 12px rgba(50, 217, 255, 0.25);
+}
+
+.logo h2 { font-size: 18px; }
+.logo span { color: var(--cyan); }
+
+.nav-title {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin: 15px 12px 8px;
+    text-transform: uppercase;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    margin-bottom: 4px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: .25s;
+    font-size: 13px;
+}
+
+.nav-item:hover, .nav-item.active {
+    background: linear-gradient(90deg, rgba(50,217,255,.12), transparent);
+    color: var(--cyan);
+}
+
+.nav-icon { width: 22px; text-align: center; }
+
+.theme-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-top: auto;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* MAIN CONTENT */
+.main {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+    padding: 25px 30px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.page-title h1 { font-size: 26px; margin-bottom: 4px; }
+.page-title p { color: var(--muted); font-size: 13px; }
+
+.header-right {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    width: 16px;
+    height: 16px;
+    stroke: var(--muted);
+    fill: none;
+    pointer-events: none;
+}
+
+.search {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 10px 15px 10px 36px;
+    color: var(--text);
+    outline: none;
+    width: 240px;
+    font-size: 13px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 2px rgba(50, 217, 255, 0.15);
+}
+
+.icon-btn {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--panel);
+    cursor: pointer;
+    color: var(--text);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.icon-btn:hover {
+    background: var(--panel2);
+    border-color: var(--cyan);
+    color: var(--cyan);
+}
+
+.icon-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.officer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel);
+    padding: 6px 12px 6px 6px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.officer:hover {
+    border-color: var(--cyan);
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.avatar svg {
+    width: 16px;
+    height: 16px;
+    stroke: #ffffff;
+    fill: none;
+    stroke-width: 2;
+}
+
+/* =========================================================
+   CARDS & GRIDS
+   ========================================================= */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 18px;
+}
+
+.kpi {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.kpi-label { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+.kpi-value { font-size: 26px; font-weight: 700; }
+.kpi-sub { font-size: 11px; margin-top: 8px; color: var(--green); }
+
+.risk-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 18px;
+}
+
+.risk-card {
+    border-radius: 18px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+}
+
+.risk-top { display: flex; justify-content: space-between; align-items: center; }
+.risk-number { font-size: 32px; font-weight: 800; }
+.risk-name { color: var(--muted); margin-top: 5px; font-size: 13px; }
+.risk-line { height: 6px; border-radius: 5px; background: var(--border); margin-top: 15px; overflow: hidden; }
+.risk-fill { height: 100%; border-radius: 5px; }
+
+.low .risk-fill { background: var(--green); width: 64%; }
+.medium .risk-fill { background: var(--yellow); width: 24%; }
+.high .risk-fill { background: var(--red); width: 12%; }
+
+.two-column {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px;
+}
+
+.panel-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.panel-title h3 { font-size: 15px; }
+.panel-title span { color: var(--muted); font-size: 11px; }
+
+/* =========================================================
+   ENHANCED FINANCIAL CHART STYLES
+   ========================================================= */
+.chart-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    height: 100%;
+}
+
+.chart-legend {
+    display: flex;
+    gap: 18px;
+    justify-content: flex-end;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+.legend-budget { background: linear-gradient(135deg, #0284c7, var(--cyan)); }
+.legend-spent { background: linear-gradient(135deg, #7c3aed, var(--purple)); }
+
+.chart-viewport {
+    position: relative;
+    height: 200px;
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    padding: 20px 10px 10px;
+    border-bottom: 1px solid var(--border);
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 39px,
+        rgba(255, 255, 255, 0.03) 39px,
+        rgba(255, 255, 255, 0.03) 40px
+    );
+}
+
+.bar-group {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 6px;
+    position: relative;
+}
+
+.bar {
+    width: 14px;
+    border-radius: 6px 6px 2px 2px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    cursor: pointer;
+}
+
+.bar-budget {
+    background: linear-gradient(180deg, var(--cyan) 0%, rgba(50, 217, 255, 0.2) 100%);
+    box-shadow: 0 0 12px rgba(50, 217, 255, 0.15);
+}
+
+.bar-spent {
+    background: linear-gradient(180deg, var(--purple) 0%, rgba(167, 139, 250, 0.2) 100%);
+    box-shadow: 0 0 12px rgba(167, 139, 250, 0.15);
+}
+
+.bar-group:hover .bar {
+    filter: brightness(1.25);
+}
+
+.bar:hover {
+    transform: scaleY(1.04);
+    transform-origin: bottom;
+}
+
+.bar::after {
+    content: attr(data-value);
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.8);
+    background: var(--panel2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 3px 6px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: bold;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: var(--shadow);
+}
+
+.bar:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+
+.bar-label {
+    position: absolute;
+    bottom: -24px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; padding: 12px; border-bottom: 1px solid var(--border); }
+td { padding: 13px 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
+tbody tr:hover { background: rgba(50,217,255,.05); cursor: pointer; }
+
+.badge { padding: 4px 8px; border-radius: 20px; font-size: 10px; font-weight: bold; }
+.badge-low { color: var(--green); background: rgba(53,229,154,.15); }
+.badge-medium { color: var(--yellow); background: rgba(255,200,87,.15); }
+.badge-high { color: var(--red); background: rgba(255,85,119,.15); }
+
+#map { height: 320px; border-radius: 12px; overflow: hidden; }
+
+.alert {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    background: var(--panel2);
+}
+
+.alert-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    background: rgba(255,85,119,.15);
+    color: var(--red);
+    font-weight: bold;
+}
+
+/* =========================================================
+   FRAUD DETECTOR STYLES
+   ========================================================= */
+.fraud-card {
+    padding: 14px;
+    background: rgba(255, 85, 119, 0.07);
+    border: 1px solid rgba(255, 85, 119, 0.3);
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
+.fraud-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.fraud-tag {
+    font-size: 10px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--red);
+    color: #fff;
+    text-transform: uppercase;
+}
+
+/* WARNING BOX DESIGN */
+.warning-box {
+    padding: 12px;
+    background: rgba(255, 85, 119, 0.15);
+    border: 1px solid var(--red);
+    border-radius: 10px;
+    color: var(--red);
+    margin-bottom: 15px;
+    display: none;
+    font-size: 12px;
+}
+
+/* =========================================================
+   MODALS & OVERLAYS
+   ========================================================= */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    backdrop-filter: blur(6px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+    padding: 20px;
+}
+
+.modal.active { display: flex; }
+
+.modal-box {
+    width: 850px;
+    max-width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 30px 100px rgba(0,0,0,.6);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.close {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    color: var(--text);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    display: grid;
+    place-items: center;
+    transition: all 0.2s ease;
+}
+
+.close:hover {
+    background: var(--red);
+    color: #fff;
+    border-color: var(--red);
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.detail {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.detail label { color: var(--muted); font-size: 10px; display: block; margin-bottom: 4px; }
+.detail strong { font-size: 13px; }
+
+.risk-score-box {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: rgba(255,85,119,.08);
+    border: 1px solid rgba(255,85,119,.25);
+    padding: 18px;
+    border-radius: 14px;
+    margin-bottom: 18px;
+}
+
+.score-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--panel);
+    border: 4px solid var(--red);
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.anomaly-card {
+    padding: 12px;
+    background: rgba(255,200,87,.08);
+    border: 1px solid rgba(255,200,87,.2);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+}
+
+.solution-card {
+    padding: 12px;
+    background: rgba(53,229,154,.08);
+    border: 1px solid rgba(53,229,154,.2);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: var(--text);
+}
+
+.solution-card strong { color: var(--green); display: block; margin-bottom: 4px; }
+
+/* OPINION STYLING */
+.opinion-card {
+    padding: 12px;
+    background: rgba(167, 139, 250, 0.08);
+    border: 1px solid rgba(167, 139, 250, 0.25);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: var(--text);
+}
+
+.opinion-card strong { color: var(--purple); display: block; margin-bottom: 4px; }
+
+.opinion-input-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.opinion-input-group input {
+    flex: 1;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-size: 12px;
+    outline: none;
+}
+
+.button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 12px;
+    transition: background-color 0.2s ease;
+}
+.button-primary { background: var(--cyan); color: #fff; }
+.button-success { background: var(--green); color: #07111f; }
+.button-dark { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+
+/* =========================================================
+   RESPONSIVE AI ASSISTANT WIDGET
+   ========================================================= */
+.ai-assistant-toggle {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    box-shadow: 0 10px 30px rgba(0,0,0,.4);
+    display: grid;
+    place-items: center;
+    font-size: 24px;
+    color: #fff;
+    cursor: pointer;
+    z-index: 2000;
+    transition: transform 0.2s ease;
+}
+.ai-assistant-toggle:hover {
+    transform: scale(1.08);
+}
+
+.ai-chat-window {
+    position: fixed;
+    bottom: 90px;
+    right: 25px;
+    width: 380px;
+    max-width: calc(100vw - 40px);
+    height: 500px;
+    max-height: calc(100vh - 120px);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    display: none;
+    flex-direction: column;
+    z-index: 2000;
+    overflow: hidden;
+}
+
+.ai-chat-window.active { display: flex; }
+
+.chat-header {
+    background: var(--panel2);
+    padding: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 14px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 12px;
+}
+
+.chat-msg {
+    padding: 10px 12px;
+    border-radius: 12px;
+    max-width: 85%;
+    line-height: 1.4;
+    word-break: break-word;
+}
+.chat-msg.ai { background: var(--panel2); border: 1px solid var(--border); align-self: flex-start; }
+.chat-msg.user { background: var(--cyan); color: #fff; align-self: flex-end; }
+
+.chat-quick-chips {
+    display: flex;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    overflow-x: auto;
+    white-space: nowrap;
+}
+.chat-chip {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.chat-chip:hover {
+    background: var(--cyan);
+    color: #fff;
+}
+
+.chat-input-area {
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    background: var(--panel2);
+}
+
+.chat-input-area input {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: var(--text);
+    outline: none;
+    font-size: 12px;
+}
+
+/* RESPONSIVE DESIGN */
+@media(max-width: 1100px) {
+    .sidebar { width: 70px; }
+    .logo h2, .nav-item span, .nav-title, .system-status { display: none; }
+    .main { margin-left: 70px; width: calc(100% - 70px); }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .two-column { grid-template-columns: 1fr; }
+}
+
+@media(max-width: 600px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; width: 100%; padding: 15px; }
+    .kpi-grid { grid-template-columns: 1fr; }
+    .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .header-right { width: 100%; justify-content: space-between; }
+    .search-wrapper { flex: 1; }
+    .search { width: 100%; }
+    .ai-chat-window {
+        right: 15px;
+        left: 15px;
+        width: auto;
+        bottom: 85px;
+        height: 70vh;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- =====================================================
+     INTAKE & PRE-ANALYSIS MODAL (FIRST SCREEN)
+     ===================================================== -->
+<div class="modal active" id="intakeModal">
+    <div class="modal-box" style="width:650px;">
+        <div class="modal-header">
+            <div>
+                <div style="color:var(--cyan); font-size:11px; font-weight:bold;">INITIAL PROJECT INTAKE</div>
+                <h2>MPLAD Sentinel Pre-Analysis</h2>
+            </div>
+            <button class="close" type="button" onclick="closeIntakeModal()" title="Cancel Intake">×</button>
+        </div>
+        <p style="color:var(--muted); font-size:12px; margin-bottom:20px;">
+            Please enter the project specifications below. The Risk Intelligence Engine will perform an initial anomaly & anti-fraud scan before opening the master dashboard.
+        </p>
+
+        <!-- WARNING ALERT FOR FRAUD CONTRACTOR SELECTION -->
+        <div class="warning-box" id="contractorWarningBox">
+            ⚠️ <strong>CRITICAL WARNING:</strong> The selected contractor is currently registered in the <strong>Blacklisted / Fraud-Flagged Database</strong> due to prior severe anomalies or money siphoning history.
+        </div>
+        
+        <form id="intakeForm" onsubmit="runInitialAnalysis(event)">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:15px;">
+                <div class="detail">
+                    <label>Project ID</label>
+                    <input type="text" id="inId" placeholder="e.g. MPL-2026-001" required style="width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px;">
+                </div>
+                <div class="detail">
+                    <label>Project Title</label>
+                    <input type="text" id="inName" placeholder="Enter Project Title" required style="width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px;">
+                </div>
+                <div class="detail">
+                    <label>Location / District</label>
+                    <input type="text" id="inLocation" placeholder="Enter Location or District" required style="width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px;">
+                </div>
+                <div class="detail">
+                    <label>Project Sector</label>
+                    <select id="inType" required style="width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px;">
+                        <option value="" disabled selected>Select Sector</option>
+                        <option>Healthcare</option>
+                        <option>Roads & Infrastructure</option>
+                        <option>Water Supply</option>
+                        <option>Education</option>
+                        <option>Sanitation & Waste</option>
+                        <option>Solar Energy</option>
+                    </select>
+                </div>
+                <div class="detail">
+                    <label>Allocated Budget (₹)</label>
+                    <input type="number" id="inBudget" placeholder="e.g. 4500000" required style="width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px;">
+                </div>
+                <div class="detail">
+                    <label>Current Expenditure (₹)</label>
+                    <input type="number" id="inSpent" placeholder="e.g. 3800000" required style="width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px;">
+                </div>
+                <div class="detail">
+                    <label>Physical Progress (%)</label>
+                    <input type="number" id="inProgress" placeholder="0 - 100" min="0" max="100" required style="width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px;">
+                </div>
+                <div class="detail">
+                    <label>Target Completion Date</label>
+                    <input type="date" id="inCompletion" required style="width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px;">
+                </div>
+            </div>
+
+            <!-- CONTRACTOR SELECTION WITH CUSTOM ENTRY -->
+            <div class="detail" style="margin-bottom: 15px;">
+                <label>Assigned Contractor / Entity Selection</label>
+                <select id="inContractor" required onchange="handleContractorSelectChange()" style="width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px; margin-bottom:8px;">
+                    <!-- Loaded dynamically -->
+                </select>
+                
+                <div id="customContractorWrapper" style="display:none; margin-top:8px; background:var(--panel); padding:10px; border-radius:8px; border:1px solid var(--border);">
+                    <label style="color:var(--cyan); margin-bottom:4px; font-weight:bold;">Custom Contractor Input:</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="customContractorName" placeholder="Enter Contractor Firm Name..." style="flex:2; background:var(--panel2); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px; font-size:12px;">
+                        <select id="customContractorStatus" style="flex:1; background:var(--panel2); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px; font-size:12px;">
+                            <option value="verified">Verified Firm</option>
+                            <option value="fraud">Flagged / Fraud Entity</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OPINION INTAKE SECTION -->
+            <div class="detail" style="margin-bottom: 15px;">
+                <label>Initial Expert & Stakeholder Opinion</label>
+                <textarea id="inOpinion" placeholder="Add expert notes, public sentiment, or nodal officer remarks..." style="width:100%; height:60px; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px; font-family:inherit; font-size:12px; resize:none;"></textarea>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button type="button" class="button button-dark" style="flex:1; padding:12px;" onclick="closeIntakeModal()">
+                    Cancel
+                </button>
+                <button type="submit" class="button button-primary" style="flex:2; padding:12px;">
+                    ⚡ Execute AI Data Analysis & Fraud Audit
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- =====================================================
+     MAIN DASHBOARD APP
+     ===================================================== -->
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="logo">
+           <img src="logo.jpeg" alt="MPLAD Sentinel Logo" class="logo-img">
+            <h2>MPLAD <span>Sentinel</span></h2>
+        </div>
+
+        <div class="nav-title">COMMAND CENTER</div>
+        <div class="nav-item active"><div class="nav-icon">⌂</div><span>Dashboard</span></div>
+        <div class="nav-item" onclick="scrollToProjects()"><div class="nav-icon">▣</div><span>Projects</span></div>
+        <div class="nav-item" onclick="scrollToContractors()"><div class="nav-icon">📋</div><span>Contractors Registry</span></div>
+        <div class="nav-item" onclick="scrollToFraud()"><div class="nav-icon">🛡</div><span>Fraud Intelligence</span></div>
+        <div class="nav-item" onclick="scrollToOpinions()"><div class="nav-icon">🗣</div><span>Public / Experts Opinion</span></div>
+        <div class="nav-item" onclick="scrollToRisk()"><div class="nav-icon">◉</div><span>Risk Intelligence</span></div>
+        <div class="nav-item" onclick="scrollToMap()"><div class="nav-icon">⌖</div><span>Geo Intelligence</span></div>
+
+        <div class="nav-title">MONITORING</div>
+        <div class="nav-item" onclick="openIntakeModal()"><div class="nav-icon">＋</div><span>New Analysis</span></div>
+        <div class="nav-item" onclick="toggleAIChat()"><div class="nav-icon">💬</div><span>AI Assistant</span></div>
+        <div class="nav-item" onclick="openOptionsModal()"><div class="nav-icon">⚙</div><span>Options & Config</span></div>
+
+        <button class="theme-toggle-btn" onclick="toggleTheme()">
+            <span id="themeLabel">☀️ Light Mode</span>
+            <span>🌗</span>
+        </button>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main">
+        <header class="header">
+            <div class="page-title">
+                <h1>Project Risk Intelligence</h1>
+                <p>Real-time AI monitoring & expenditure audit for MPLAD projects</p>
+            </div>
+            
+            <div class="header-right">
+                <div class="search-wrapper">
+                    <svg class="search-icon" viewBox="0 0 24 24"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input class="search" id="searchBox" placeholder="Search project, district..." onkeyup="searchProjects()">
+                </div>
+                
+                <div class="icon-btn" onclick="toggleAIChat()" title="AI Assistant">
+                    <svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                </div>
+                
+                <div class="officer">
+                    <div class="avatar">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <div>
+                        <strong style="font-size:12px;">Admin Officer</strong>
+                        <div style="font-size:10px;color:var(--muted);">Mumbai Region</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI CARDS -->
+        <section class="kpi-grid">
+            <div class="kpi">
+                <div class="kpi-label">TOTAL PROJECTS</div>
+                <div class="kpi-value" id="totalProjects">1,251</div>
+                <div class="kpi-sub">↑ Active Tracking</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">ALLOCATED FUNDS</div>
+                <div class="kpi-value">₹190.9 Cr</div>
+                <div class="kpi-sub">Government Pool</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">POTENTIAL FRAUD DETECTED</div>
+                <div class="kpi-value" id="totalFraudAmount" style="color:var(--red);">₹1.42 Cr</div>
+                <div class="kpi-sub" style="color:var(--red);">🚨 Immediate Freeze Advised</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">FLAGGED ANOMALIES</div>
+                <div class="kpi-value" id="flaggedAnomaliesCount" style="color:var(--red)">151</div>
+                <div class="kpi-sub" style="color:var(--yellow)">Requires Action</div>
+            </div>
+        </section>
+
+        <!-- RISK CATEGORY CARDS -->
+        <section class="risk-grid" id="riskSection">
+            <div class="risk-card low">
+                <div class="risk-top">
+                    <div>
+                        <div class="risk-number" id="lowRiskCount" style="color:var(--green)">800</div>
+                        <div class="risk-name">Low Risk Projects</div>
+                    </div>
+                    <div style="font-size:24px">🟢</div>
+                </div>
+                <div class="risk-line"><div class="risk-fill"></div></div>
+            </div>
+            <div class="risk-card medium">
+                <div class="risk-top">
+                    <div>
+                        <div class="risk-number" id="medRiskCount" style="color:var(--yellow)">300</div>
+                        <div class="risk-name">Medium Risk Projects</div>
+                    </div>
+                    <div style="font-size:24px">🟡</div>
+                </div>
+                <div class="risk-line"><div class="risk-fill"></div></div>
+            </div>
+            <div class="risk-card high">
+                <div class="risk-top">
+                    <div>
+                        <div class="risk-number" id="highRiskCount" style="color:var(--red)">151</div>
+                        <div class="risk-name">High Risk Projects</div>
+                    </div>
+                    <div style="font-size:24px">🔴</div>
+                </div>
+                <div class="risk-line"><div class="risk-fill"></div></div>
+            </div>
+        </section>
+
+        <!-- CONTRACTORS LIST SECTION -->
+        <section class="panel" id="contractorsSection" style="margin-bottom:18px;">
+            <div class="panel-title">
+                <h3>Contractors & Entities Registry</h3>
+                <span>Separated into Verified Entities and Blacklisted / Anomaly-Flagged Entities</span>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap:18px;">
+                <!-- COMPLIANT CONTRACTORS -->
+                <div>
+                    <h4 style="color:var(--green); font-size:13px; margin-bottom:10px;">🟢 Compliant & Verified Contractors</h4>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Contractor Name</th>
+                                    <th>Rating</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="verifiedContractorsTable">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- FRAUD / FLAGGED CONTRACTORS -->
+                <div>
+                    <h4 style="color:var(--red); font-size:13px; margin-bottom:10px;">🔴 Blacklisted / Fraud-Flagged Contractors</h4>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Contractor Name</th>
+                                    <th>Reason / Anomaly</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fraudContractorsTable">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CHARTS SECTION -->
+        <section class="two-column">
+            <div class="panel">
+                <div class="panel-title">
+                    <div>
+                        <h3>Financial Intelligence</h3>
+                        <span style="color:var(--muted); font-size:11px;">District Allocation vs Expenditure Analysis</span>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-dot legend-budget"></div>
+                            <span>Allocated Budget</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot legend-spent"></div>
+                            <span>Disbursed Spent</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-viewport">
+                        <!-- District 1 -->
+                        <div class="bar-group">
+                            <div class="bar bar-budget" style="height: 85%;" data-value="₹45 Cr"></div>
+                            <div class="bar bar-spent" style="height: 62%;" data-value="₹32 Cr"></div>
+                            <div class="bar-label">Mumbai</div>
+                        </div>
+                        <!-- District 2 -->
+                        <div class="bar-group">
+                            <div class="bar bar-budget" style="height: 70%;" data-value="₹38 Cr"></div>
+                            <div class="bar bar-spent" style="height: 45%;" data-value="₹24 Cr"></div>
+                            <div class="bar-label">Pune</div>
+                        </div>
+                        <!-- District 3 -->
+                        <div class="bar-group">
+                            <div class="bar bar-budget" style="height: 80%;" data-value="₹40 Cr"></div>
+                            <div class="bar bar-spent" style="height: 72%;" data-value="₹36 Cr"></div>
+                            <div class="bar-label">Nashik</div>
+                        </div>
+                        <!-- District 4 -->
+                        <div class="bar-group">
+                            <div class="bar bar-budget" style="height: 60%;" data-value="₹30 Cr"></div>
+                            <div class="bar bar-spent" style="height: 35%;" data-value="₹18 Cr"></div>
+                            <div class="bar-label">Nagpur</div>
+                        </div>
+                        <!-- District 5 -->
+                        <div class="bar-group">
+                            <div class="bar bar-budget" style="height: 90%;" data-value="₹50 Cr"></div>
+                            <div class="bar bar-spent" style="height: 78%;" data-value="₹42 Cr"></div>
+                            <div class="bar-label">Thane</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">
+                    <h3>AI Diagnostic Engine</h3>
+                    <span>Detection Parameters</span>
+                </div>
+                <div style="font-size:12px; color:var(--muted); line-height:1.6;">
+                    <div class="anomaly-card" style="margin-top:5px;">
+                        <strong style="color:var(--yellow)">• Financial vs Physical Lag</strong><br>
+                        Flags projects where spending exceeds completed ground works by >25%.
+                    </div>
+                    <div class="anomaly-card">
+                        <strong style="color:var(--yellow)">• Timeline Overrun Index</strong><br>
+                        Detects projects surpassing contractual completion windows.
+                    </div>
+                    <div class="anomaly-card" style="background:rgba(255,85,119,.08); border-color:rgba(255,85,119,.25);">
+                        <strong style="color:var(--red)">• Anti-Fraud & Siphoning Audit</strong><br>
+                        Flags shell contractors, duplicate billing, and unnecessary over-spending.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MONEY FRAUD DETECTING MECHANISM SECTION -->
+        <section class="panel" id="fraudSection" style="margin-bottom:18px; border:1px solid rgba(255,85,119,.4);">
+            <div class="panel-title">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:20px;">🛡️</span>
+                    <div>
+                        <h3 style="color:var(--red);">Money Fraud & Misuse Detection Sentinel</h3>
+                        <span style="color:var(--muted); font-size:11px;">Real-time automated audit alerting users of money theft, entity mismatch & unnecessary expenditure</span>
+                    </div>
+                </div>
+                <span class="badge badge-high" style="padding:6px 10px;">LIVE AUDIT ACTIVE</span>
+            </div>
+            
+            <div id="fraudAlertFeed" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:12px;">
+                <!-- Fraud Alerts loaded dynamically -->
+            </div>
+        </section>
+
+        <!-- PROJECT TABLE -->
+        <section class="panel" id="projectsSection">
+            <div class="panel-title">
+                <h3>Monitored Projects Main Interface</h3>
+                <span>Click any row for detailed anomaly report & AI resolution solutions</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Project ID</th>
+                            <th>Location</th>
+                            <th>Sector</th>
+                            <th>Budget</th>
+                            <th>Spent</th>
+                            <th>Progress</th>
+                            <th>Risk Score</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectTable"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- PUBLIC / EXPERTS OPINION SECTION -->
+        <section class="panel" id="opinionsDashboardSection" style="margin-bottom:18px;">
+            <div class="panel-title">
+                <h3>Public / Experts Opinion</h3>
+                <span>Live Feedback Stream Across Active Projects</span>
+            </div>
+            <div id="dashboardOpinionsFeed" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:12px;">
+                <!-- Dynamically populated opinion cards -->
+            </div>
+        </section>
+
+        <!-- MAP AND ALERTS -->
+        <section class="two-column" id="mapSection">
+            <div class="panel">
+                <div class="panel-title">
+                    <h3>Geo-Spatial Intelligence</h3>
+                    <span>District Map View</span>
+                </div>
+                <div id="map"></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">
+                    <h3>Live Anomaly Alerts</h3>
+                    <span>AI Priority Stream</span>
+                </div>
+                <div id="alerts"></div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- =====================================================
+     PROJECT DETAIL & RESOLUTION MODAL
+     ===================================================== -->
+<div class="modal" id="projectModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div>
+                <div style="color:var(--cyan); font-size:11px; font-weight:bold;">ANOMALY & RESOLUTION REPORT</div>
+                <h2 id="modalTitle">Project Intelligence</h2>
+            </div>
+            <button class="close" onclick="closeModal()">×</button>
+        </div>
+
+        <div class="detail-grid">
+            <div class="detail"><label>PROJECT ID</label><strong id="detailId">-</strong></div>
+            <div class="detail"><label>LOCATION</label><strong id="detailLocation">-</strong></div>
+            <div class="detail"><label>SECTOR</label><strong id="detailType">-</strong></div>
+            <div class="detail"><label>BUDGET</label><strong id="detailBudget">-</strong></div>
+            <div class="detail"><label>EXPENDITURE</label><strong id="detailSpent">-</strong></div>
+            <div class="detail"><label>PROGRESS</label><strong id="detailProgress">-</strong></div>
+        </div>
+
+        <div class="risk-score-box">
+            <div class="score-circle" id="modalScoreCircle">
+                <span id="modalScore">82</span>
+            </div>
+            <div>
+                <div style="color:var(--red); font-size:11px; font-weight:bold;">RISK LEVEL ASSESSMENT</div>
+                <h2 id="modalRisk" style="color:var(--red);">HIGH RISK</h2>
+                <p style="color:var(--muted); font-size:11px; margin-top:4px;">Generated by MPLAD Sentinel Risk Engine</p>
+            </div>
+        </div>
+
+        <h3 style="font-size:14px; margin-bottom:10px;">Detected Anomalies</h3>
+        <div id="riskReasons"></div>
+
+        <!-- FRAUD DETAILS IN MODAL -->
+        <div id="modalFraudContainer"></div>
+
+        <h3 style="font-size:14px; margin-top:15px; margin-bottom:10px;">Recommended AI Action Solutions</h3>
+        <div id="aiSolutions"></div>
+
+        <!-- OPINION SECTION -->
+        <h3 style="font-size:14px; margin-top:15px; margin-bottom:10px;">Public / Experts Opinion</h3>
+        <div class="opinion-card">
+            <strong>AI Opinion Synthesis:</strong>
+            <p id="aiOpinionText">High local public interest. Delay in execution is generating citizen complaints in the district.</p>
+        </div>
+        
+        <div class="opinion-card">
+            <strong>Stakeholder Opinions:</strong>
+            <div id="opinionList" style="margin-top:6px; display:flex; flex-direction:column; gap:6px;"></div>
+            
+            <div class="opinion-input-group">
+                <input type="text" id="newOpinionInput" placeholder="Add custom expert note or public feedback...">
+                <button class="button button-dark" onclick="addOpinionFromModal()">Add Opinion</button>
+            </div>
+        </div>
+
+        <!-- FOOTER ACTIONS -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; border-top:1px solid var(--border); padding-top:15px;">
+            <div id="addToInterfaceContainer">
+                <!-- Dynamically updated -->
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="button button-dark" onclick="closeModal()">Dismiss</button>
+                <button class="button button-primary" onclick="markForReview()">Flag for Formal Investigation</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =====================================================
+     OPTIONS / SYSTEM SETTINGS MODAL
+     ===================================================== -->
+<div class="modal" id="optionsModal">
+    <div class="modal-box" style="width:500px;">
+        <div class="modal-header">
+            <h2>System Options & Configuration</h2>
+            <button class="close" onclick="closeOptionsModal()">×</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:15px;">
+            <div class="detail">
+                <label>Anomaly Sensitivity Threshold</label>
+                <input type="range" min="1" max="100" value="75" style="width:100%;">
+            </div>
+            <div class="detail">
+                <label>Fraud Detection AI Rigor</label>
+                <select style="width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:6px; border-radius:6px;">
+                    <option>Maximum (Flag All Over-Quotations & Shell Directives)</option>
+                    <option>Standard Risk Threshold</option>
+                    <option>Conservative Audit Mode</option>
+                </select>
+            </div>
+            <div class="detail">
+                <label>Automated Alert Notifications</label>
+                <select style="width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:6px; border-radius:6px;">
+                    <option>Enabled (Immediate)</option>
+                    <option>Daily Digest</option>
+                    <option>Disabled</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-top:20px; text-align:right;">
+            <button class="button button-primary" onclick="closeOptionsModal()">Save Settings</button>
+        </div>
+    </div>
+</div>
+
+<!-- =====================================================
+     FLOATING INTERACTIVE AI ASSISTANT CHAT WIDGET
+     ===================================================== -->
+<div class="ai-assistant-toggle" onclick="toggleAIChat()" title="Open AI Assistant">💬</div>
+
+<div class="ai-chat-window" id="aiChatWindow">
+    <div class="chat-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:10px; height:10px; border-radius:50%; background:var(--green);" title="Online"></div>
+            <div>
+                <strong style="font-size:13px; color:var(--text);">Sentinel Assistant</strong>
+                <div style="font-size:10px; color:var(--muted);">Expenditure & Fraud Advisor</div>
+            </div>
+        </div>
+        <button class="close" onclick="toggleAIChat()" style="width:24px; height:24px; line-height:0;">×</button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="chat-msg ai">
+            Greetings! I am your Sentinel AI Assistant. Ask me to audit contractor records, calculate risk scores, or evaluate money theft alerts.
+        </div>
+    </div>
+    
+    <div class="chat-quick-chips">
+        <div class="chat-chip" onclick="quickAsk('Audit summary')">📊 Audit Summary</div>
+        <div class="chat-chip" onclick="quickAsk('Flagged contractors')">🚨 Fraud Contractors</div>
+        <div class="chat-chip" onclick="quickAsk('High risk list')">⚠️ High Risks</div>
+        <div class="chat-chip" onclick="quickAsk('Help tips')">💡 Help Tips</div>
+    </div>
+
+    <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="Ask AI about budgets, fraud, contractors..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+        <button class="button button-primary" onclick="sendChatMessage()" style="padding:6px 12px;">Send</button>
+    </div>
+</div>
+
+<!-- JAVASCRIPT LOGIC -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* =========================================================
+   EXPANDED CONTRACTOR DATABASE (VERIFIED VS FRAUD)
+   ========================================================= */
+let contractorsList = [
+    { name: "Apex Infra Solutions (Flagged)", isFraud: true, reason: "Prior funds siphoning & non-execution history" },
+    { name: "Alpha Shell Constructions", isFraud: true, reason: "Shell company / Duplicate billing records" },
+    { name: "Shadow Tech Builders", isFraud: true, reason: "Blacklisted by Anti-Corruption Bureau" },
+    { name: "Matrix Global Infra Enterprise", isFraud: true, reason: "Forged bank guarantees & fake progress reports" },
+    { name: "Vanguard Urban Developers", isFraud: true, reason: "Multiple delayed projects & material quality inflation" },
+    { name: "Zenith Earthworks Pvt Ltd", isFraud: true, reason: "Unregistered subcontracting & tax evasion flag" },
+    { name: "HydroTech Projects", isFraud: false, rating: "A+ Verified" },
+    { name: "Vidyut Infra", isFraud: false, rating: "A Verified" },
+    { name: "MedCare Allied Pvt Ltd", isFraud: false, rating: "B+ Compliant" },
+    { name: "Metro Bridge Corp", isFraud: false, rating: "A+ Verified" },
+    { name: "Civic Pavements & Roads Ltd", isFraud: false, rating: "A Verified" },
+    { name: "GreenGrid Renewable Power", isFraud: false, rating: "A+ Verified" },
+    { name: "Bharat Waterways Ltd", isFraud: false, rating: "B Compliant" }
+];
+
+/* =========================================================
+   PROJECT DATABASE & INITIAL STATE
+   ========================================================= */
+let projects = [
+    { 
+        id: "MPL-1023", 
+        name: "Road Infrastructure", 
+        location: "Mumbai Suburban", 
+        type: "Roads & Infrastructure", 
+        budget: 2000000, 
+        spent: 1800000, 
+        progress: 30, 
+        completion: "2026-06-01", 
+        contractor: "Apex Infra Solutions (Flagged)",
+        lat: 19.0760, 
+        lng: 72.8777, 
+        inMainInterface: true,
+        opinions: ["Nodal Officer: Contractor speed is slower than expected.", "Public Audit: High traffic bottleneck during construction."] 
+    },
+    { 
+        id: "MPL-1088", 
+        name: "Rural Pipeline Project", 
+        location: "Pune", 
+        type: "Water Supply", 
+        budget: 3500000, 
+        spent: 2500000, 
+        progress: 55, 
+        completion: "2026-05-20", 
+        contractor: "HydroTech Projects",
+        lat: 18.5204, 
+        lng: 73.8567, 
+        inMainInterface: true,
+        opinions: ["District Engineer: Right-of-way clearance granted."] 
+    },
+    { 
+        id: "MPL-1122", 
+        name: "High School Upgrade", 
+        location: "Nashik", 
+        type: "Education", 
+        budget: 1500000, 
+        spent: 900000, 
+        progress: 72, 
+        completion: "2026-10-20", 
+        contractor: "Vidyut Infra",
+        lat: 19.9975, 
+        lng: 73.7898, 
+        inMainInterface: true,
+        opinions: ["School Committee: High satisfaction on structural quality."] 
+    },
+    { 
+        id: "MPL-1190", 
+        name: "Primary Health Center", 
+        location: "Nagpur", 
+        type: "Healthcare", 
+        budget: 2800000, 
+        spent: 2700000, 
+        progress: 42, 
+        completion: "2026-03-10", 
+        contractor: "MedCare Allied Pvt Ltd",
+        lat: 21.1458, 
+        lng: 79.0882, 
+        inMainInterface: true,
+        opinions: ["Community Rep: Urgently requires equipment procurement oversight."] 
+    },
+    { 
+        id: "MPL-1205", 
+        name: "Flyover Reconstruction", 
+        location: "Thane", 
+        type: "Roads & Infrastructure", 
+        budget: 1200000, 
+        spent: 500000, 
+        progress: 62, 
+        completion: "2026-11-10", 
+        contractor: "Metro Bridge Corp",
+        lat: 19.2183, 
+        lng: 72.9781, 
+        inMainInterface: true,
+        opinions: ["Safety Inspector: Material compliance verified."] 
+    }
+];
+
+let activeModalProjectId = null;
+let map, mapMarkers = [];
+let recentAIResponses = new Set(); // TRACK RESPONSES TO PREVENT REPETITION
+
+/* =========================================================
+   THEME SWITCHER FUNCTIONALITY
+   ========================================================= */
+function toggleTheme() {
+    const body = document.documentElement;
+    const themeLabel = document.getElementById("themeLabel");
+    if (body.getAttribute("data-theme") === "dark") {
+        body.setAttribute("data-theme", "light");
+        themeLabel.textContent = "🌙 Dark Mode";
+    } else {
+        body.setAttribute("data-theme", "dark");
+        themeLabel.textContent = "☀️ Light Mode";
+    }
+}
+
+/* =========================================================
+   MONEY FRAUD & MISUSE DETECTION ALGORITHM
+   ========================================================= */
+function analyzeFraud(project) {
+    let fraudAlerts = [];
+    let estimatedTheft = 0;
+    let isFraud = false;
+
+    let spendRatio = (project.spent / project.budget) * 100;
+    let workRatio = project.progress;
+    if (spendRatio >= 85 && workRatio < 45) {
+        isFraud = true;
+        let siphonedAmount = Math.round(project.spent * 0.45);
+        estimatedTheft += siphonedAmount;
+        fraudAlerts.push({
+            type: "Severe Funds Siphoning / Theft",
+            severity: "Critical",
+            details: `Contractor '${project.contractor || "Unknown"}' has claimed 85%+ funds (₹${(project.spent/100000).toFixed(2)} Lakhs) while completing under 45% ground work. Potential ghost billing detected of ~₹${(siphonedAmount/100000).toFixed(2)} Lakhs.`
+        });
+    }
+
+    if (project.spent > project.budget) {
+        isFraud = true;
+        let excess = project.spent - project.budget;
+        estimatedTheft += excess;
+        fraudAlerts.push({
+            type: "Unnecessary / Unauthorized Over-Expenditure",
+            severity: "High",
+            details: `Project has exceeded sanction limit by ₹${(excess/100000).toFixed(2)} Lakhs without nodal council authorization.`
+        });
+    }
+
+    const matchedContractor = contractorsList.find(c => c.name.toLowerCase() === (project.contractor || "").toLowerCase());
+    if (matchedContractor && matchedContractor.isFraud) {
+        isFraud = true;
+        fraudAlerts.push({
+            type: "High-Risk Fraud Contractor Entity Flag",
+            severity: "Warning",
+            details: `Contractor '${project.contractor}' is registered on the fraud list: ${matchedContractor.reason}.`
+        });
+    }
+
+    return { isFraud, fraudAlerts, estimatedTheft };
+}
+
+/* =========================================================
+   PRE-ANALYSIS INTAKE LOGIC & CUSTOM CONTRACTOR INPUT
+   ========================================================= */
+function populateContractorDropdown() {
+    const dropdown = document.getElementById("inContractor");
+    dropdown.innerHTML = '<option value="" disabled selected>Select Contractor / Entity</option>';
+    
+    contractorsList.forEach(c => {
+        let opt = document.createElement("option");
+        opt.value = c.name;
+        opt.textContent = c.name + (c.isFraud ? " (🚨 FRAUD LIST)" : " (✓ Verified)");
+        dropdown.appendChild(opt);
+    });
+    
+    // CUSTOM OPTION FOR USER
+    let customOpt = document.createElement("option");
+    customOpt.value = "__CUSTOM__";
+    customOpt.textContent = "✍️ Enter My Own Custom Contractor...";
+    dropdown.appendChild(customOpt);
+
+    checkContractorWarning();
+}
+
+function handleContractorSelectChange() {
+    const selectedVal = document.getElementById("inContractor").value;
+    const customWrapper = document.getElementById("customContractorWrapper");
+    
+    if (selectedVal === "__CUSTOM__") {
+        customWrapper.style.display = "block";
+        document.getElementById("contractorWarningBox").style.display = "none";
+    } else {
+        customWrapper.style.display = "none";
+        checkContractorWarning();
+    }
+}
+
+function checkContractorWarning() {
+    const selectedName = document.getElementById("inContractor").value;
+    const matched = contractorsList.find(c => c.name === selectedName);
+    const warningBox = document.getElementById("contractorWarningBox");
+    
+    if (matched && matched.isFraud) {
+        warningBox.style.display = "block";
+    } else {
+        warningBox.style.display = "none";
+    }
+}
+
+function openIntakeModal() {
+    document.getElementById("intakeModal").classList.add("active");
+    populateContractorDropdown();
+}
+
+function closeIntakeModal() {
+    document.getElementById("intakeModal").classList.remove("active");
+    document.getElementById("intakeForm").reset();
+    document.getElementById("contractorWarningBox").style.display = "none";
+    document.getElementById("customContractorWrapper").style.display = "none";
+}
+
+function runInitialAnalysis(e) {
+    e.preventDefault();
+    let selectedContractor = document.getElementById("inContractor").value;
+    let isFraudUser = false;
+    let reasonTxt = "Custom contractor entry submitted by user";
+
+    if (selectedContractor === "__CUSTOM__") {
+        const customName = document.getElementById("customContractorName").value.trim();
+        const customStatus = document.getElementById("customContractorStatus").value;
+        if (!customName) {
+            alert("Please provide the name for your custom contractor.");
+            return;
+        }
+        selectedContractor = customName + " (User Entry)";
+        isFraudUser = customStatus === "fraud";
+        
+        // ADD TO SYSTEM REGISTRY FOR CONTINUITY
+        contractorsList.push({
+            name: selectedContractor,
+            isFraud: isFraudUser,
+            rating: isFraudUser ? undefined : "User Verified",
+            reason: isFraudUser ? "Flagged during custom manual intake" : undefined
+        });
+        renderContractorsTable();
+    }
+
+    const matched = contractorsList.find(c => c.name === selectedContractor);
+    if (matched && matched.isFraud) {
+        alert("🚨 WARNING: Contractor (" + selectedContractor + ") is flagged for FRAUD. Pre-analysis will flag high risk.");
+    }
+
+    const opinionTxt = document.getElementById("inOpinion").value.trim();
+    
+    const newProj = {
+        id: document.getElementById("inId").value,
+        name: document.getElementById("inName").value,
+        location: document.getElementById("inLocation").value,
+        type: document.getElementById("inType").value,
+        budget: Number(document.getElementById("inBudget").value),
+        spent: Number(document.getElementById("inSpent").value),
+        progress: Number(document.getElementById("inProgress").value),
+        completion: document.getElementById("inCompletion").value,
+        contractor: selectedContractor,
+        lat: 19.076 + (Math.random() - 0.5) * 0.5,
+        lng: 72.877 + (Math.random() - 0.5) * 0.5,
+        inMainInterface: false,
+        opinions: opinionTxt ? [opinionTxt] : ["Initial intake executed via Sentinel Portal."]
+    };
+
+    projects.unshift(newProj);
+    closeIntakeModal();
+    openProject(newProj);
+}
+
+/* =========================================================
+   RISK & ANOMALY EVALUATION ENGINE
+   ========================================================= */
+function calculateRisk(project) {
+    let spendRatio = (project.spent / project.budget) * 100;
+    let gap = spendRatio - project.progress;
+    let spendingRisk = gap >= 40 ? 40 : gap >= 20 ? 25 : 10;
+
+    let today = new Date();
+    let comp = new Date(project.completion);
+    let delayDays = Math.max(0, Math.floor((today - comp) / (1000 * 60 * 60 * 24)));
+    let delayRisk = delayDays > 60 ? 30 : delayDays > 0 ? 15 : 0;
+
+    let costRisk = project.budget > 4000000 ? 20 : 5;
+    
+    let fraudAudit = analyzeFraud(project);
+    let fraudBonus = fraudAudit.isFraud ? 25 : 0;
+
+    let score = Math.min(100, spendingRisk + delayRisk + costRisk + fraudBonus);
+    let riskLevel = score <= 35 ? "Low" : score <= 65 ? "Medium" : "High";
+
+    return { score, riskLevel, spendRatio, gap, delayDays, fraudAudit };
+}
+
+/* =========================================================
+   RENDER & UI UPDATES
+   ========================================================= */
+function renderContractorsTable() {
+    const vTable = document.getElementById("verifiedContractorsTable");
+    const fTable = document.getElementById("fraudContractorsTable");
+    vTable.innerHTML = "";
+    fTable.innerHTML = "";
+
+    contractorsList.forEach(c => {
+        if (c.isFraud) {
+            fTable.innerHTML += `
+                <tr>
+                    <td style="color:var(--red); font-weight:bold;">${c.name}</td>
+                    <td>${c.reason || 'Flagged for financial anomalies'}</td>
+                    <td><span class="badge badge-high">BLACK-LISTED</span></td>
+                </tr>
+            `;
+        } else {
+            vTable.innerHTML += `
+                <tr>
+                    <td><strong>${c.name}</strong></td>
+                    <td style="color:var(--green);">${c.rating || 'Verified'}</td>
+                    <td><span class="badge badge-low">VERIFIED</span></td>
+                </tr>
+            `;
+        }
+    });
+}
+
+function renderProjects() {
+    const table = document.getElementById("projectTable");
+    table.innerHTML = "";
+
+    const mainProjects = projects.filter(p => p.inMainInterface);
+
+    mainProjects.forEach(project => {
+        let r = calculateRisk(project);
+        let badgeClass = r.riskLevel === "High" ? "badge-high" : r.riskLevel === "Medium" ? "badge-medium" : "badge-low";
+        let row = document.createElement("tr");
+        row.onclick = () => openProject(project);
+
+        row.innerHTML = `
+            <td><strong style="color:var(--cyan);">${project.id}</strong><br><span style="color:var(--muted); font-size:10px;">${project.name}</span></td>
+            <td>${project.location}</td>
+            <td>${project.type}</td>
+            <td>₹${project.budget.toLocaleString('en-IN')}</td>
+            <td>₹${project.spent.toLocaleString('en-IN')}</td>
+            <td>${project.progress}%</td>
+            <td><span class="badge ${badgeClass}">${r.score}</span></td>
+            <td><span class="badge ${r.delayDays > 0 ? 'badge-high' : 'badge-low'}">${r.delayDays > 0 ? 'Delayed' : 'On Track'}</span></td>
+        `;
+        table.appendChild(row);
+    });
+
+    document.getElementById("totalProjects").textContent = mainProjects.length.toLocaleString('en-IN');
+    
+    let lowCount = mainProjects.filter(p => calculateRisk(p).riskLevel === "Low").length;
+    let medCount = mainProjects.filter(p => calculateRisk(p).riskLevel === "Medium").length;
+    let highCount = mainProjects.filter(p => calculateRisk(p).riskLevel === "High").length;
+
+    document.getElementById("lowRiskCount").textContent = lowCount;
+    document.getElementById("medRiskCount").textContent = medCount;
+    document.getElementById("highRiskCount").textContent = highCount;
+    document.getElementById("flaggedAnomaliesCount").textContent = highCount;
+
+    renderFraudSection();
+    renderDashboardOpinionsFeed();
+}
+
+function renderFraudSection() {
+    const feed = document.getElementById("fraudAlertFeed");
+    feed.innerHTML = "";
+    
+    let totalFraudSum = 0;
+
+    projects.filter(p => p.inMainInterface).forEach(project => {
+        let fraudAudit = analyzeFraud(project);
+        if (fraudAudit.isFraud) {
+            totalFraudSum += fraudAudit.estimatedTheft;
+            fraudAudit.fraudAlerts.forEach(alertItem => {
+                feed.innerHTML += `
+                    <div class="fraud-card" onclick='openProject(${JSON.stringify(project)})' style="cursor:pointer">
+                        <div class="fraud-card-header">
+                            <strong style="color:var(--red); font-size:12px;">🚨 ${alertItem.type}</strong>
+                            <span class="fraud-tag">${alertItem.severity}</span>
+                        </div>
+                        <div style="font-size:11px; margin-bottom:4px;"><strong>Project:</strong> ${project.id} - ${project.name}</div>
+                        <div style="font-size:11px; margin-bottom:6px; color:var(--muted);"><strong>Contractor:</strong> ${project.contractor || "N/A"}</div>
+                        <p style="font-size:11px; color:var(--text); line-height:1.4;">${alertItem.details}</p>
+                    </div>
+                `;
+            });
+        }
+    });
+
+    if (feed.innerHTML === "") {
+        feed.innerHTML = `<div style="color:var(--green); font-size:12px; grid-column:1/-1;">✓ No money theft or unauthorized expenditure detected across current projects.</div>`;
+    }
+
+    document.getElementById("totalFraudAmount").textContent = totalFraudSum > 0 ? `₹${(totalFraudSum/100000).toFixed(2)} Lakhs` : "₹0.00";
+}
+
+function renderDashboardOpinionsFeed() {
+    const feed = document.getElementById("dashboardOpinionsFeed");
+    feed.innerHTML = "";
+    
+    const mainProjects = projects.filter(p => p.inMainInterface);
+    
+    mainProjects.forEach(project => {
+        if (project.opinions && project.opinions.length > 0) {
+            project.opinions.forEach(op => {
+                feed.innerHTML += `
+                    <div class="opinion-card" onclick='openProject(${JSON.stringify(project)})' style="cursor:pointer; margin-bottom:0;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                            <strong style="font-size:11px;">${project.id} - ${project.name}</strong>
+                            <span style="font-size:10px; color:var(--muted);">${project.location}</span>
+                        </div>
+                        <p style="font-size:12px; line-height:1.4;">"${op}"</p>
+                    </div>
+                `;
+            });
+        }
+    });
+}
+
+function openProject(project) {
+    activeModalProjectId = project.id;
+    let r = calculateRisk(project);
+
+    document.getElementById("modalTitle").textContent = project.name;
+    document.getElementById("detailId").textContent = project.id;
+    document.getElementById("detailLocation").textContent = project.location;
+    document.getElementById("detailType").textContent = project.type;
+    document.getElementById("detailBudget").textContent = "₹" + project.budget.toLocaleString('en-IN');
+    document.getElementById("detailSpent").textContent = "₹" + project.spent.toLocaleString('en-IN');
+    document.getElementById("detailProgress").textContent = project.progress + "%";
+    document.getElementById("modalScore").textContent = r.score;
+    document.getElementById("modalRisk").textContent = r.riskLevel.toUpperCase() + " RISK";
+
+    let reasonsHTML = "";
+    let solutionsHTML = "";
+
+    if (r.gap >= 20) {
+        reasonsHTML += `<div class="anomaly-card">⚠️ <strong>Expenditure vs Progress Mismatch:</strong> ${Math.round(r.spendRatio)}% of funds disbursed, but only ${project.progress}% completed.</div>`;
+        solutionsHTML += `<div class="solution-card"><strong>Solution:</strong> Issue an immediate financial freeze on further disbursements until physical milestone auditing is verified on-site.</div>`;
+    }
+    if (r.delayDays > 0) {
+        reasonsHTML += `<div class="anomaly-card">⚠️ <strong>Completion Delay:</strong> Project is overdue by ${r.delayDays} days.</div>`;
+        solutionsHTML += `<div class="solution-card"><strong>Solution:</strong> Submit SLA penalty notice to contractor and trigger project execution timeline acceleration plan.</div>`;
+    }
+    if (reasonsHTML === "") {
+        reasonsHTML = `<div class="anomaly-card" style="background:rgba(53,229,154,.08); color:var(--text);">✓ No major risk anomalies detected.</div>`;
+        solutionsHTML = `<div class="solution-card"><strong>Solution:</strong> Continue standard quarterly monitoring.</div>`;
+    }
+
+    document.getElementById("riskReasons").innerHTML = reasonsHTML;
+    document.getElementById("aiSolutions").innerHTML = solutionsHTML;
+
+    const fraudBox = document.getElementById("modalFraudContainer");
+    let fraudAudit = analyzeFraud(project);
+    if (fraudAudit.isFraud) {
+        let fHTML = `<h3 style="font-size:14px; margin-top:15px; margin-bottom:10px; color:var(--red);">🚨 Fraud & Money Theft Warnings</h3>`;
+        fraudAudit.fraudAlerts.forEach(fa => {
+            fHTML += `
+                <div class="anomaly-card" style="background:rgba(255,85,119,.1); border-color:rgba(255,85,119,.3);">
+                    <strong style="color:var(--red);">• ${fa.type} (${fa.severity})</strong><br>
+                    ${fa.details}
+                </div>
+            `;
+        });
+        fraudBox.innerHTML = fHTML;
+    } else {
+        fraudBox.innerHTML = "";
+    }
+
+    renderModalOpinions(project);
+    renderInterfaceButton(project);
+
+    document.getElementById("projectModal").classList.add("active");
+}
+
+function renderModalOpinions(project) {
+    let aiSynthesis = r => {
+        if (r.riskLevel === "High") return "High scrutiny recommended. Public and expert feedback indicates urgency and potential ground friction.";
+        if (r.riskLevel === "Medium") return "Moderate public interest. Monitoring requested for supply chain delays.";
+        return "Positive public sentiment. Execution aligned with community expectations.";
+    };
+
+    let r = calculateRisk(project);
+    document.getElementById("aiOpinionText").textContent = aiSynthesis(r);
+
+    const opinionList = document.getElementById("opinionList");
+    opinionList.innerHTML = "";
+    if (project.opinions && project.opinions.length > 0) {
+        project.opinions.forEach(op => {
+            opinionList.innerHTML += `<div style="padding:6px 10px; background:var(--panel); border-radius:6px; font-size:11px; border-left:3px solid var(--purple);">${op}</div>`;
+        });
+    } else {
+        opinionList.innerHTML = `<div style="color:var(--muted); font-size:11px;">No public or expert opinions recorded yet.</div>`;
+    }
+}
+
+function addOpinionFromModal() {
+    const input = document.getElementById("newOpinionInput");
+    const text = input.value.trim();
+    if (!text || !activeModalProjectId) return;
+
+    let proj = projects.find(p => p.id === activeModalProjectId);
+    if (proj) {
+        if (!proj.opinions) proj.opinions = [];
+        proj.opinions.push("Public/Expert Note: " + text);
+        input.value = "";
+        renderModalOpinions(proj);
+        renderDashboardOpinionsFeed();
+    }
+}
+
+function renderInterfaceButton(project) {
+    const container = document.getElementById("addToInterfaceContainer");
+    if (project.inMainInterface) {
+        container.innerHTML = `<span class="badge badge-low" style="padding:8px 12px; font-size:11px;">✓ Active in Main Interface</span>`;
+    } else {
+        container.innerHTML = `
+            <button class="button button-success" onclick="addToMainInterface('${project.id}')">
+                ＋ Add to Main Project Interface
+            </button>
+        `;
+    }
+}
+
+function addToMainInterface(projId) {
+    let proj = projects.find(p => p.id === projId);
+    if (proj) {
+        proj.inMainInterface = true;
+        renderProjects();
+        renderAlerts();
+        updateMap();
+        renderInterfaceButton(proj);
+        alert(`Project ${proj.id} successfully added to Main Project Interface dashboard!`);
+    }
+}
+
+function closeModal() { 
+    document.getElementById("projectModal").classList.remove("active"); 
+    activeModalProjectId = null;
+}
+
+function openOptionsModal() { document.getElementById("optionsModal").classList.add("active"); }
+function closeOptionsModal() { document.getElementById("optionsModal").classList.remove("active"); }
+
+function markForReview() {
+    alert("Project flagged! Fraud investigative report & case file generated for Anti-Corruption Unit.");
+    closeModal();
+}
+
+function renderAlerts() {
+    const container = document.getElementById("alerts");
+    container.innerHTML = "";
+    projects.filter(p => p.inMainInterface && calculateRisk(p).riskLevel === "High").forEach(p => {
+        container.innerHTML += `
+            <div class="alert" onclick='openProject(${JSON.stringify(p)})' style="cursor:pointer">
+                <div class="alert-icon">⚠️</div>
+                <div>
+                    <strong style="font-size:12px;">${p.id} - ${p.name}</strong>
+                    <p style="font-size:11px; color:var(--muted);">Expenditure or Fraud Alert Triggered!</p>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function searchProjects() {
+    let q = document.getElementById("searchBox").value.toLowerCase();
+    document.querySelectorAll("#projectTable tr").forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none";
+    });
+}
+
+/* =========================================================
+   MAP INITIALIZATION
+   ========================================================= */
+function initMap() {
+    map = L.map("map").setView([19.25, 73.3], 7);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "OpenStreetMap" }).addTo(map);
+    updateMap();
+}
+
+function updateMap() {
+    mapMarkers.forEach(m => map.removeLayer(m));
+    mapMarkers = [];
+    projects.filter(p => p.inMainInterface).forEach(p => {
+        let r = calculateRisk(p);
+        let color = r.riskLevel === "High" ? "#ff5577" : r.riskLevel === "Medium" ? "#ffc857" : "#35e59a";
+        let m = L.circleMarker([p.lat, p.lng], { radius: 8, color: color, fillColor: color, fillOpacity: 0.8 }).addTo(map);
+        m.bindPopup(`<b>${p.id}</b><br>${p.name}<br>Score: ${r.score}`);
+        mapMarkers.push(m);
+    });
+}
+
+/* =========================================================
+   DYNAMIC & NON-REPEATING AI ASSISTANT CHAT ENGINE
+   ========================================================= */
+function toggleAIChat() {
+    const chatWin = document.getElementById("aiChatWindow");
+    chatWin.classList.toggle("active");
+    if(chatWin.classList.contains("active")) {
+        document.getElementById("chatInput").focus();
+    }
+}
+
+function quickAsk(topic) {
+    const input = document.getElementById("chatInput");
+    input.value = topic;
+    sendChatMessage();
+}
+
+function generateDynamicAIResponse(query) {
+    let q = query.toLowerCase();
+    let responses = [];
+
+    if (q.includes("audit") || q.includes("summary") || q.includes("stat")) {
+        let mainProjs = projects.filter(p => p.inMainInterface);
+        let highRisk = mainProjs.filter(p => calculateRisk(p).riskLevel === "High").length;
+        let totalSpent = mainProjs.reduce((acc, p) => acc + p.spent, 0);
+
+        responses = [
+            `Audit Overview: Monitoring ${mainProjs.length} active projects with ₹${(totalSpent/10000000).toFixed(2)} Cr overall expenditure. Currently, ${highRisk} project(s) exhibit high-risk anomalies requiring immediate field inspection.`,
+            `Executive Audit Data: Total tracked expenditure across active projects stands at ₹${(totalSpent/10000000).toFixed(2)} Cr. The system has highlighted ${highRisk} critical intervention targets.`,
+            `System Audit Snapshot: Operational oversight is currently active on ${mainProjs.length} projects. Ground progress vs financial disbursement delta indicates ${highRisk} flagged cases.`
+        ];
+    } else if (q.includes("contractor") || q.includes("flagged") || q.includes("blacklisted")) {
+        let fraudList = contractorsList.filter(c => c.isFraud).map(c => c.name);
+        
+        responses = [
+            `Contractor Registry Audit: There are currently ${contractorsList.length} entities registered. ${fraudList.length} entities are flagged on the anti-corruption watchlist, including ${fraudList.slice(0, 2).join(", ")}.`,
+            `Entity Watchlist: ${fraudList.length} out of ${contractorsList.length} contractor entities have been blacklisted or flagged for ghost billing history. Check the Contractors Registry tab for full details.`,
+            `Contractor Integrity Alert: The system contains ${fraudList.length} blacklisted contractors (e.g., ${fraudList[0]}). New intake submissions against these firms will trigger automatic alerts.`
+        ];
+    } else if (q.includes("risk") || q.includes("high")) {
+        let highProjs = projects.filter(p => p.inMainInterface && calculateRisk(p).riskLevel === "High");
+        let titles = highProjs.map(p => p.id + " (" + p.name + ")");
+
+        responses = [
+            `High-Risk Alert Stream: ${highProjs.length} project(s) flagged as High Risk: ${titles.join(", ")}. Primary issues include funds siphoning and progress delay.`,
+            `Risk Analysis Breakdown: High risk status is assigned to ${highProjs.length} project(s). Highest risk vector detected: ${titles[0] || 'None currently active'}.`,
+            `Critical Attention Items: ${highProjs.length} project(s) exceed maximum risk thresholds. Click on any flagged row in the main table to view recommended resolution steps.`
+        ];
+    } else if (q.includes("fraud") || q.includes("theft") || q.includes("siphon") || q.includes("money")) {
+        let fraudCount = projects.filter(p => p.inMainInterface && analyzeFraud(p).isFraud).length;
+
+        responses = [
+            `Money Fraud Sentinel: ${fraudCount} project(s) have been flagged for potential money siphoning or unauthorized expenditure exceeding approved budgets.`,
+            `Financial Misuse Intelligence: The Sentinel engine has calculated active fraud risks in ${fraudCount} monitored project(s). Immediate freeze of funds is recommended.`,
+            `Anti-Corruption Audit: ${fraudCount} item(s) in the active project feed show severe fund-to-progress divergence indicating potential ghost invoice billing.`
+        ];
+    } else if (q.includes("help") || q.includes("tip") || q.includes("how")) {
+        responses = [
+            `Sentinel Quick Tips: 1. Click on any project row in the table to view AI resolution suggestions. 2. Use 'New Analysis' to test intake with custom contractors. 3. Monitor live theft alerts in the Fraud Sentinel panel.`,
+            `Guidance: You can add custom contractors during initial intake, inspect live district metrics on the geo-map, or toggle themes using the sidebar button.`,
+            `System Navigation: Click any high-risk card or fraud item to open full investigation modals with stakeholder feedback and action steps.`
+        ];
+    } else {
+        responses = [
+            `I am analyzing your input "${query}". I can help you inspect project budgets, audit contractors, calculate financial runway, or check fraud alerts.`,
+            `Received query regarding "${query}". You can ask me to list blacklisted contractors, show audit summaries, or highlight high-risk projects.`,
+            `Sentinel Risk Engine initialized for "${query}". Try asking for 'Audit summary', 'Fraud contractors', or 'High risks' for immediate insights.`
+        ];
+    }
+
+    // FILTER OUT RESPONSES ALREADY USED TO PREVENT REPETITION
+    let availableResponses = responses.filter(r => !recentAIResponses.has(r));
+    if (availableResponses.length === 0) {
+        recentAIResponses.clear(); // RESET HISTORY WHEN ALL VARIATIONS USED
+        availableResponses = responses;
+    }
+
+    let selectedResponse = availableResponses[Math.floor(Math.random() * availableResponses.length)];
+    recentAIResponses.add(selectedResponse);
+    return selectedResponse;
+}
+
+function sendChatMessage() {
+    const input = document.getElementById("chatInput");
+    const container = document.getElementById("chatMessages");
+    const txt = input.value.trim();
+    if (!txt) return;
+
+    container.innerHTML += `<div class="chat-msg user">${escapeHTML(txt)}</div>`;
+    input.value = "";
+    container.scrollTop = container.scrollHeight;
+
+    setTimeout(() => {
+        let reply = generateDynamicAIResponse(txt);
+        container.innerHTML += `<div class="chat-msg ai">${reply}</div>`;
+        container.scrollTop = container.scrollHeight;
+    }, 400);
+}
+
+function escapeHTML(str) {
+    return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+    );
+}
+
+function scrollToProjects() { document.getElementById("projectsSection").scrollIntoView({ behavior: "smooth" }); }
+function scrollToContractors() { document.getElementById("contractorsSection").scrollIntoView({ behavior: "smooth" }); }
+function scrollToFraud() { document.getElementById("fraudSection").scrollIntoView({ behavior: "smooth" }); }
+function scrollToOpinions() { document.getElementById("opinionsDashboardSection").scrollIntoView({ behavior: "smooth" }); }
+function scrollToRisk() { document.getElementById("riskSection").scrollIntoView({ behavior: "smooth" }); }
+function scrollToMap() { document.getElementById("mapSection").scrollIntoView({ behavior: "smooth" }); }
+
+/* INIT ON LOAD */
+window.onload = () => {
+    populateContractorDropdown();
+    renderContractorsTable();
+    renderProjects();
+    renderAlerts();
+    initMap();
+};
+</script>
+</body>
+</html>
